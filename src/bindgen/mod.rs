@@ -39,19 +39,20 @@ macro_rules! deserialize_enum_str {
 mod bindings;
 mod builder;
 mod cargo;
-mod cdecl;
+pub mod cdecl;
 mod config;
 mod declarationtyperesolver;
 mod dependencies;
 mod error;
-mod ir;
+pub mod ir;
 mod library;
 mod mangle;
 mod monomorph;
 mod parser;
 mod rename;
-mod utilities;
-mod writer;
+pub mod utilities;
+pub mod writer;
+
 
 #[allow(unused)]
 pub(crate) use self::cargo::*;

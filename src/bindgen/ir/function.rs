@@ -209,7 +209,10 @@ impl SynFnArgHelpers for syn::FnArg {
                 } else {
                     Ok(None)
                 }
-            }
+            },
+            &syn::FnArg::SelfValue(_) | &syn::FnArg::SelfRef(_) => {
+                Ok(Some(("self".to_string(), Type::Primitive(PrimitiveType::Void))))
+            },
             _ => Err("Parameter has an unsupported type.".to_owned()),
         }
     }

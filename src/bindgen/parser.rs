@@ -494,6 +494,16 @@ impl Parse {
                 &syn::Item::Type(ref item) => {
                     self.load_syn_ty(crate_name, mod_cfg, item);
                 }
+                &syn::Item::Impl(ref itemimpl) => {
+                    for item in &itemimpl.items {
+                        match item {
+                            &syn::ImplItem::Method(ref iim) => {
+                                self.load_impl_method(binding_crate_name, crate_name, mod_cfg, iim);
+                            },
+                            _ => {}
+                        }
+                    }
+                }
                 _ => {}
             }
         }
@@ -602,6 +612,50 @@ impl Parse {
                 "Skip {}::{} - (non `extern \"C\"`).",
                 crate_name, &item.ident
             );
+        }
+    }
+
+    /// Loads a `impl method` declaration
+    fn load_impl_method(
+        &mut self,
+        binding_crate_name: &str,
+        crate_name: &str,
+        mod_cfg: &Option<Cfg>,
+        item: &syn::ImplItemMethod,
+    ) {
+        if crate_name != binding_crate_name {
+            info!(
+                "Skip {}::{} - (fn's outside of the binding crate are not used).",
+                crate_name, &item.sig.ident
+            );
+            return;
+        }
+        if let syn::Visibility::Public(_) = item.vis {
+            if (item.sig.abi.is_omitted() || item.sig.abi.is_c()) {
+                match Function::load(
+                    item.sig.ident.to_string(),
+                    &item.sig.decl,
+                    false,
+                    &item.attrs,
+                    mod_cfg,
+                ) {
+                    Ok(func) => {
+                        info!("Take {}::{}.", crate_name, &item.sig.ident);
+
+                        self.functions.push(func);
+                    }
+                    Err(msg) => {
+                        error!("Cannot use fn {}::{} ({}).", crate_name, &item.sig.ident, msg);
+                    }
+                }
+                return;
+            }
+        }
+
+        // TODO
+        if let syn::Visibility::Public(_) = item.vis {
+        } else {
+            warn!("Skip {}::{} - (not `pub`).", crate_name, &item.sig.ident);
         }
     }
 

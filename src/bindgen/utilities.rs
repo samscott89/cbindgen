@@ -110,6 +110,18 @@ impl SynItemHelpers for syn::Field {
     }
 }
 
+impl SynItemHelpers for syn::ImplItemMethod {
+    fn has_attr_word(&self, word: &str) -> bool {
+        return self.attrs
+            .iter()
+            .filter_map(|x| x.interpret_meta())
+            .any(|attr| match attr {
+                syn::Meta::Word(ref ident) if ident == word => true,
+                _ => false,
+            });
+    }
+}
+
 /// Helper function for accessing Abi information
 pub trait SynAbiHelpers {
     fn is_c(&self) -> bool;
